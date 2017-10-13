@@ -5,8 +5,11 @@ import java.util.Arrays;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobPriority;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
@@ -19,9 +22,18 @@ public class App {
 		
 	private static Logger logger = Logger.getLogger(App.class);
 	
+	private static enum JobType {
+		RedditHateSpeechFilter,
+		HatefulSubreddits,
+		HpLevelByDate,
+		HpLevelByUser,
+		RaidUser,
+		TemporalPattern
+	}
+	
 	public static void main(String [] args) {
 		try {
-			int res = run(args);
+			int res = run(args, JobType.TemporalPattern);
 			System.exit(res);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -29,10 +41,9 @@ public class App {
 		}
 	}
 	
-	static int run(String [] args) throws IOException, InterruptedException, ClassNotFoundException {
+	static int run(String [] args, JobType jobType) throws IOException, InterruptedException, ClassNotFoundException {
 		Configuration conf = new Configuration();
-	    //Job job = Job.getInstance(conf, "Reddit Hate Speech Job");
-	    Job job = Job.getInstance(conf, "Most Hateful Reddits Job");
+	    Job job = Job.getInstance(conf, "Reddit Hate Speech Job");
 		
 	    job.setJarByClass(App.class);
 		
@@ -47,51 +58,104 @@ public class App {
 			return 1;
 		}
 		
-		//job.setMapperClass(RedditMapper.class);
-		job.setMapperClass(HatefulRedditsMaper.class);
-		logger.info("mapper class is " + job.getMapperClass());
+		switch (jobType) {
+			case RedditHateSpeechFilter:
+				job.setMapperClass(RedditMapper.class);
+				job.setMapOutputKeyClass(Text.class);
+				job.setMapOutputValueClass(IntWritable.class);
+				job.setReducerClass(RedditReducer.class);
+				job.setCombinerClass(RedditReducer.class);
+				job.setOutputKeyClass(Text.class);
+				job.setOutputValueClass(IntWritable.class);
+				break;
+				
+			case HatefulSubreddits:
+				job.setMapperClass(HatefulRedditsMaper.class);
+				job.setMapOutputKeyClass(Text.class);
+				job.setMapOutputValueClass(IntWritable.class);
+				job.setReducerClass(HatefulRedditsReducer.class);
+				job.setCombinerClass(HatefulRedditsReducer.class);
+				job.setOutputKeyClass(Text.class);
+				job.setOutputValueClass(IntWritable.class);
+				break;
+				
+			case HpLevelByDate:
+				job.setMapperClass(HpLevelByDateMapper.class);
+				job.setMapOutputKeyClass(Text.class);
+				job.setMapOutputValueClass(DoubleWritable.class);
+				job.setReducerClass(HpLevelByDateReducer.class);
+				job.setCombinerClass(HpLevelByDateReducer.class);
+				job.setOutputKeyClass(Text.class);
+				job.setOutputValueClass(DoubleWritable.class);
+				break;
+				
+			case HpLevelByUser:
+				job.setMapperClass(HpLevelByUserMapper.class);
+				job.setMapOutputKeyClass(Text.class);
+				job.setMapOutputValueClass(DoubleWritable.class);
+				job.setReducerClass(HpLevelByUserReducer.class);
+				job.setCombinerClass(HpLevelByUserReducer.class);
+				job.setOutputKeyClass(Text.class);
+				job.setOutputValueClass(DoubleWritable.class);
+				break;
+				
+			case RaidUser:
+				job.setMapperClass(RaidUserMapper.class);
+				job.setMapOutputKeyClass(Text.class);
+				job.setMapOutputValueClass(DoubleWritable.class);
+				job.setReducerClass(RaidUserReducer.class);
+				job.setCombinerClass(RaidUserReducer.class);
+				job.setOutputKeyClass(Text.class);
+				job.setOutputValueClass(DoubleWritable.class);
+				break;
+	
+			case TemporalPattern:
+				job.setMapperClass(TemporalMapper.class);
+				job.setMapOutputKeyClass(LongWritable.class);
+				job.setMapOutputValueClass(DoubleWritable.class);
+				job.setReducerClass(TemporalReducer.class);
+				job.setCombinerClass(TemporalReducer.class);
+				job.setOutputKeyClass(LongWritable.class);
+				job.setOutputValueClass(DoubleWritable.class);
+				break;
+				
+			default:
+				break;
+		}
 		
-		job.setMapOutputKeyClass(Text.class);
-		job.setMapOutputValueClass(IntWritable.class);
+		logger.info("mapper class is " + job.getMapperClass());
 		logger.info("mapper output key class is " + job.getMapOutputKeyClass());
 		logger.info("mapper output value class is " + job.getMapOutputValueClass());
-
-		//job.setReducerClass(RedditReducer.class);
-		job.setReducerClass(HatefulRedditsReducer.class);
-		logger.info("reducer class is " + job.getReducerClass());
-		//job.setCombinerClass(RedditReducer.class);
-		job.setCombinerClass(HatefulRedditsReducer.class);
-		logger.info("combiner class is " + job.getCombinerClass());
-
-		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(IntWritable.class);
+		logger.info("reducer class is " + job.getReducerClass());		
+		logger.info("combiner class is " + job.getCombinerClass());		
 		logger.info("output key class is " + job.getOutputKeyClass());
 		logger.info("output value class is " + job.getOutputValueClass());
 
+		
 		job.setInputFormatClass(TextInputFormat.class);
 		logger.info("input format class is " + job.getInputFormatClass());
 
 		job.setOutputFormatClass(TextOutputFormat.class);
 		logger.info("output format class is " + job.getOutputFormatClass());
-
-//		Path filePath = new Path(args[0]);
-//		logger.info("input path "+ filePath);
-//		FileInputFormat.setInputPaths(job, filePath);
-//
-//		Path outputPath = new Path(args[1]);
-//		logger.info("output path "+ outputPath);
-//		FileOutputFormat.setOutputPath(job, outputPath);
 		
 		Path filePath = new Path(args[0]);
-		Path filePath2 = new Path(args[1]);
 		logger.info("input path "+ filePath);
-		logger.info("input path "+ filePath2);
 		FileInputFormat.setInputPaths(job, filePath);
-		FileInputFormat.setInputPaths(job, filePath2);
-
-		Path outputPath = new Path(args[2]);
-		logger.info("output path "+ outputPath);
-		FileOutputFormat.setOutputPath(job, outputPath);
+		
+		if (jobType == JobType.RedditHateSpeechFilter) {
+			Path outputPath = new Path(args[1]);
+			logger.info("output path "+ outputPath);
+			FileOutputFormat.setOutputPath(job, outputPath);
+		}
+		else {
+			Path filePath2 = new Path(args[1]);
+			logger.info("input path "+ filePath2);
+			FileInputFormat.setInputPaths(job, filePath2);
+			
+			Path outputPath = new Path(args[2]);
+			logger.info("output path "+ outputPath);
+			FileOutputFormat.setOutputPath(job, outputPath);
+		}
 
 		job.waitForCompletion(true);
 		return 0;

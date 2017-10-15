@@ -13,10 +13,12 @@ import java.util.StringTokenizer;
 
 public class HpLevelByUserMapper extends Mapper<Object, Text, Text, DoubleWritable> {
 	public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+		String [] arr = value.toString().split("\t");
+		
 		Gson gson = new Gson();
 		
-		Map<String,Object> submission = gson.fromJson(getJsonFromLine(value.toString()), Map.class);
-		double hateWordCount = getHateCountFromLine(value.toString());
+		Map<String,Object> submission = gson.fromJson(arr[0].toString(), Map.class);
+		double hateWordCount = Double.parseDouble(arr[1]);
 		
 		if (submission.get("body") == null || submission.get("author") == null) {
 			return;
@@ -25,53 +27,14 @@ public class HpLevelByUserMapper extends Mapper<Object, Text, Text, DoubleWritab
 		String bodyAsString = submission.get("body").toString();
 		String author = submission.get("author").toString();
 		
+		double total = bodyAsString.length() / 4;
 		
-        StringTokenizer tokenizer = new StringTokenizer(bodyAsString);
-        double totalToken = 0;
+		if (total == 0) {
+			return;
+		}
 
-        while (tokenizer.hasMoreTokens()) {
-            totalToken++;
-        }
-
-        if(totalToken == 0) {
-            return;
-        }
-
-        double hateTermFrequency = hateWordCount / totalToken;
-
+        double hateTermFrequency = hateWordCount / total;
 
         context.write(new Text(author), new DoubleWritable(hateTermFrequency));
-	}
-	
-	private String getJsonFromLine(String line) {
-		char [] lineArray = line.toCharArray();
-		int jsonEndIndex = lineArray.length-1;
-		
-		for (int i = lineArray.length-1; i >= 0; i--) {
-			if (lineArray[i] == '}') {
-				jsonEndIndex = i;
-				break;
-			}
-		}
-		
-		String jsonAsString = line.substring(0, jsonEndIndex+1);
-		
-		return jsonAsString;
-	}
-	
-	private int getHateCountFromLine(String line) {
-		char [] lineArray = line.toCharArray();
-		int jsonEndIndex = lineArray.length-1;
-		
-		for (int i = lineArray.length-1; i >= 0; i--) {
-			if (lineArray[i] == '}') {
-				jsonEndIndex = i;
-				break;
-			}
-		}
-		
-		int count = Integer.parseInt(line.substring(jsonEndIndex+1).trim());
-		
-		return count;
 	}
 }

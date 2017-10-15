@@ -28,17 +28,6 @@ public class HpLevelByDateMapper extends Mapper<Object, Text, Text, DoubleWritab
 		String createdTime = submission.get("created_utc").toString();		
 		
 		String date = calculateDate(createdTime);
-
-//        StringTokenizer tokenizer = new StringTokenizer(bodyAsString);
-//        double totalToken = 0;
-//
-//        while (tokenizer.hasMoreTokens()) {
-//            totalToken++;
-//        }
-//
-//        if(totalToken == 0) {
-//            return;
-//        }
 		
 		double total = bodyAsString.length() / 4;
 		

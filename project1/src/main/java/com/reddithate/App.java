@@ -33,7 +33,7 @@ public class App {
 	
 	public static void main(String [] args) {
 		try {
-			int res = run(args, JobType.HpLevelByDate);
+			int res = run(args, JobType.TemporalPattern);
 			System.exit(res);
 		} catch (Exception e) {
 			e.printStackTrace();

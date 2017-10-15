@@ -21,11 +21,10 @@ public class RaidUserMapper extends Mapper<Object, Text, Text, DoubleWritable> {
 	
 	protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
 
-		String [] arr = value.toString().split("\t");
-		
 		Gson gson = new Gson();
 		
-		Map<String,Object> submission = gson.fromJson(arr[0].toString(), Map.class);
+		Map<String,Object> submission = gson.fromJson(getJsonFromLine(value.toString()), Map.class);
+		double hateTermCount = getHateCountFromLine(value.toString());
 		
 		if (submission.get("author") == null || submission.get("body") == null || submission.get("created_utc") == null) {
 			return;
@@ -44,7 +43,6 @@ public class RaidUserMapper extends Mapper<Object, Text, Text, DoubleWritable> {
 
         StringTokenizer tokenizer = new StringTokenizer(bodyAsString);
         double totalToken = 0;
-        double hateTermCount = Double.parseDouble(arr[1]);
 
         while (tokenizer.hasMoreTokens()) {
             totalToken++;
@@ -60,7 +58,7 @@ public class RaidUserMapper extends Mapper<Object, Text, Text, DoubleWritable> {
     }
 	
 	private long calculateHours(String timestampString) {
-        long timestamp = (Long.parseLong(timestampString) * 1000);
+		long timestamp = (Double.valueOf(timestampString).longValue() * 1000);
         Date date = new Date(timestamp);
         Calendar c = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
         c.setTime(date);
@@ -69,4 +67,36 @@ public class RaidUserMapper extends Mapper<Object, Text, Text, DoubleWritable> {
         String hour = dateFormat.format(c.getTime());
         return Long.parseLong(hour);
     }
+	
+	private String getJsonFromLine(String line) {
+		char [] lineArray = line.toCharArray();
+		int jsonEndIndex = lineArray.length-1;
+		
+		for (int i = lineArray.length-1; i >= 0; i--) {
+			if (lineArray[i] == '}') {
+				jsonEndIndex = i;
+				break;
+			}
+		}
+		
+		String jsonAsString = line.substring(0, jsonEndIndex+1);
+		
+		return jsonAsString;
+	}
+	
+	private int getHateCountFromLine(String line) {
+		char [] lineArray = line.toCharArray();
+		int jsonEndIndex = lineArray.length-1;
+		
+		for (int i = lineArray.length-1; i >= 0; i--) {
+			if (lineArray[i] == '}') {
+				jsonEndIndex = i;
+				break;
+			}
+		}
+		
+		int count = Integer.parseInt(line.substring(jsonEndIndex+1).trim());
+		
+		return count;
+	}
 }

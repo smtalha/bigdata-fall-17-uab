@@ -33,7 +33,7 @@ public class App {
 	
 	public static void main(String [] args) {
 		try {
-			int res = run(args, JobType.TemporalPattern);
+			int res = run(args, JobType.HpLevelByDate);
 			System.exit(res);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -64,7 +64,6 @@ public class App {
 				job.setMapOutputKeyClass(Text.class);
 				job.setMapOutputValueClass(IntWritable.class);
 				job.setReducerClass(RedditReducer.class);
-				job.setCombinerClass(RedditReducer.class);
 				job.setOutputKeyClass(Text.class);
 				job.setOutputValueClass(IntWritable.class);
 				break;
@@ -74,7 +73,6 @@ public class App {
 				job.setMapOutputKeyClass(Text.class);
 				job.setMapOutputValueClass(IntWritable.class);
 				job.setReducerClass(HatefulRedditsReducer.class);
-				job.setCombinerClass(HatefulRedditsReducer.class);
 				job.setOutputKeyClass(Text.class);
 				job.setOutputValueClass(IntWritable.class);
 				break;
@@ -84,7 +82,6 @@ public class App {
 				job.setMapOutputKeyClass(Text.class);
 				job.setMapOutputValueClass(DoubleWritable.class);
 				job.setReducerClass(HpLevelByDateReducer.class);
-				job.setCombinerClass(HpLevelByDateReducer.class);
 				job.setOutputKeyClass(Text.class);
 				job.setOutputValueClass(DoubleWritable.class);
 				break;
@@ -94,7 +91,6 @@ public class App {
 				job.setMapOutputKeyClass(Text.class);
 				job.setMapOutputValueClass(DoubleWritable.class);
 				job.setReducerClass(HpLevelByUserReducer.class);
-				job.setCombinerClass(HpLevelByUserReducer.class);
 				job.setOutputKeyClass(Text.class);
 				job.setOutputValueClass(DoubleWritable.class);
 				break;
@@ -104,7 +100,6 @@ public class App {
 				job.setMapOutputKeyClass(Text.class);
 				job.setMapOutputValueClass(DoubleWritable.class);
 				job.setReducerClass(RaidUserReducer.class);
-				job.setCombinerClass(RaidUserReducer.class);
 				job.setOutputKeyClass(Text.class);
 				job.setOutputValueClass(DoubleWritable.class);
 				break;
@@ -114,7 +109,6 @@ public class App {
 				job.setMapOutputKeyClass(LongWritable.class);
 				job.setMapOutputValueClass(DoubleWritable.class);
 				job.setReducerClass(TemporalReducer.class);
-				job.setCombinerClass(TemporalReducer.class);
 				job.setOutputKeyClass(LongWritable.class);
 				job.setOutputValueClass(DoubleWritable.class);
 				break;
@@ -142,20 +136,9 @@ public class App {
 		logger.info("input path "+ filePath);
 		FileInputFormat.setInputPaths(job, filePath);
 		
-		if (jobType == JobType.RedditHateSpeechFilter) {
-			Path outputPath = new Path(args[1]);
-			logger.info("output path "+ outputPath);
-			FileOutputFormat.setOutputPath(job, outputPath);
-		}
-		else {
-			Path filePath2 = new Path(args[1]);
-			logger.info("input path "+ filePath2);
-			FileInputFormat.setInputPaths(job, filePath2);
-			
-			Path outputPath = new Path(args[2]);
-			logger.info("output path "+ outputPath);
-			FileOutputFormat.setOutputPath(job, outputPath);
-		}
+		Path outputPath = new Path(args[1]);
+		logger.info("output path "+ outputPath);
+		FileOutputFormat.setOutputPath(job, outputPath);
 
 		job.waitForCompletion(true);
 		return 0;

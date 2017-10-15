@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class HpLevelByDateMapper extends Mapper<Object, Text, Text, DoubleWritable> {
-	public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+	public void map(Object key, Text value, Context context) throws IOException, InterruptedException {		
 		String [] arr = value.toString().split("\t");
 		
 		Gson gson = new Gson();
@@ -29,25 +29,31 @@ public class HpLevelByDateMapper extends Mapper<Object, Text, Text, DoubleWritab
 		
 		String date = calculateDate(createdTime);
 
-        StringTokenizer tokenizer = new StringTokenizer(bodyAsString);
-        double totalToken = 0;
+//        StringTokenizer tokenizer = new StringTokenizer(bodyAsString);
+//        double totalToken = 0;
+//
+//        while (tokenizer.hasMoreTokens()) {
+//            totalToken++;
+//        }
+//
+//        if(totalToken == 0) {
+//            return;
+//        }
+		
+		double total = bodyAsString.length() / 4;
+		
+		if (total == 0) {
+			return;
+		}
 
-        while (tokenizer.hasMoreTokens()) {
-            totalToken++;
-        }
-
-        if(totalToken == 0) {
-            return;
-        }
-
-        double hateTermFrequency = hateWordCount / totalToken;
+        double hateTermFrequency = hateWordCount / total;
 
 
         context.write(new Text(date), new DoubleWritable(hateTermFrequency));
 	}
 	
 	private String calculateDate(String timestampString) {
-        long timestamp = (Long.parseLong(timestampString) * 1000);
+        long timestamp = (Double.valueOf(timestampString).longValue() * 1000);
         Date date = new Date(timestamp);
         Calendar c = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
         c.setTime(date);

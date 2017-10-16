@@ -28,12 +28,13 @@ public class App {
 		HpLevelByDate,
 		HpLevelByUser,
 		RaidUser,
-		TemporalPattern
+		TemporalPattern,
+		MostUsedHateWords
 	}
 	
 	public static void main(String [] args) {
 		try {
-			int res = run(args, JobType.TemporalPattern);
+			int res = run(args, JobType.MostUsedHateWords);
 			System.exit(res);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -111,6 +112,15 @@ public class App {
 				job.setReducerClass(TemporalReducer.class);
 				job.setOutputKeyClass(LongWritable.class);
 				job.setOutputValueClass(DoubleWritable.class);
+				break;
+				
+			case MostUsedHateWords:
+				job.setMapperClass(MostUserHateWordMapper.class);
+				job.setMapOutputKeyClass(Text.class);
+				job.setMapOutputValueClass(Text.class);
+				job.setReducerClass(MostUsedHateWordReducer.class);
+				job.setOutputKeyClass(Text.class);
+				job.setOutputValueClass(Text.class);
 				break;
 				
 			default:

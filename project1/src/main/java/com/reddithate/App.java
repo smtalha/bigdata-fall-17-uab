@@ -34,7 +34,7 @@ public class App {
 	
 	public static void main(String [] args) {
 		try {
-			int res = run(args, JobType.MostUsedHateWords);
+			int res = run(args, JobType.RaidUser);
 			System.exit(res);
 		} catch (Exception e) {
 			e.printStackTrace();
